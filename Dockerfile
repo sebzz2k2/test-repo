@@ -1,27 +1,27 @@
 # set base image (host OS)
 FROM python:3.8
-
+USER root
 RUN rm /bin/sh && ln -s /bin/bash /bin/sh
 
 RUN apt-get -y update
-RUN apt-get install -y curl nano wget nginx git
+RUN apt-get install -y curl nano wget nginx git gnupg
 
-RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
-RUN echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list
-
+RUN apt update && \
+    curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - && \
+    echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list && \
+    apt update && \
+    apt install -q -y yarn
 
 # Mongo
-RUN ln -s /bin/echo /bin/systemctl
-RUN wget -qO - https://www.mongodb.org/static/pgp/server-4.4.asc | apt-key add -
-RUN echo "deb http://repo.mongodb.org/apt/debian buster/mongodb-org/4.4 main" | tee /etc/apt/sources.list.d/mongodb-org-4.4.list
-RUN apt-get -y update
-RUN apt-get install -y mongodb-org
 
+RUN wget -qO - https://www.mongodb.org/static/pgp/server-6.0.asc | gpg --dearmor -o /etc/apt/keyrings/packages.mongodb.gpg && \
+    echo "deb [ arch=amd64,arm64 signed-by=/etc/apt/keyrings/packages.mongodb.gpg ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/6.0 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-6.0.list && \
+    apt-get update && apt-get install -y mongodb-org && \
+    rm -rf /var/lib/apt/lists/*
 # Install Yarn
-RUN apt-get install -y yarn
 
 # Install PIP
-RUN easy_install pip
+RUN pip install --upgrade pip==23.3.1
 
 
 ENV ENV_TYPE staging
@@ -36,3 +36,5 @@ COPY src/requirements.txt .
 
 # install dependencies
 RUN pip install -r requirements.txt
+
+#COPY . .
