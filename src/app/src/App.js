@@ -31,8 +31,8 @@ export function App() {
 		setNewTodo('');
 		try {
 			await apiRequest('todos/', 'POST', todoData);
-			setTodos(prevTodos => [...prevTodos, todoData]);
 			alert("todo added successfully")
+			await fetchTodos()
 		} catch (error) {
 			setError(error.message);
 		}
